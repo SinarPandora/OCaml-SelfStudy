@@ -19,13 +19,19 @@ rule read =
   (* 遇到空白字符时直接递归调用自己（跳过了空白字符）*)
   (* 大括号内的是返回值 *)
   | white { read lexbuf }
+  | "true" { TRUE }
+  | "false" { FALSE }
   | "+" { PLUS }
   | "*" { TIMES }
   | "(" { LPAREN }
   | ")" { RPAREN }
+  | "<=" { LEQ }
   | "let" { LET }
   | "=" { EQUALS }
   | "in" { IN }
+  | "if" { IF }
+  | "then" { THEN }
+  | "else" { ELSE }
   (* Lexing.lexeme lexbuf 的含义是当前捕获到的全部内容，
      此处应用 int_of_string 将其转换为整数 *)
   | int { INT (int_of_string (Lexing.lexeme lexbuf)) }
