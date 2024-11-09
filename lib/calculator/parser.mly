@@ -1,4 +1,6 @@
+(* 携带 int 数据的 token *)
 %token <int> INT
+(* 本身表示特定含义的 token *)
 %token PLUS
 %token TIMES
 %token LPAREN
@@ -6,9 +8,11 @@
 %token EOF
 
 (* 声明结合性，并且越往下，操作符优先级越高 *)
-(* 左结合说明 AST 尽量往左侧搭建 *)
+(* 左结合： x + y + z => (x + y) + z，优先计算左侧值 *)
 %left PLUS
 %left TIMES
+(* nonassoc：不能结合，表示 x + y + z 不能同时出现，
+   必须拆分成子句（比如使用括号）*)
 
 %start <Ast.expr> prog
 
