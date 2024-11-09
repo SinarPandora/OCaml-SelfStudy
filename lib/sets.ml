@@ -121,7 +121,7 @@ module RbSet : Set = struct
 
   (** 检查插入后的根节点状态，并将根节点置为黑色
       Efficiency: O(log n) *)
-  let rec insert x s =
+  let insert x s =
     match insert_aux x s with
     | Leaf -> failwith "Impossible Case"
     | Node (_, l, v, r) -> Node (Blk, l, v, r)

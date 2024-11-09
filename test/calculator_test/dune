@@ -1,0 +1,3 @@
+(test
+ (name calculator_test)
+ (libraries calculator ounit2))

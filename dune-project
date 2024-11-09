@@ -1,6 +1,7 @@
 (lang dune 3.16)
 
 (name hello_ocaml)
+(using menhir 3.0)
 
 (generate_opam_files true)
 
