@@ -4,27 +4,15 @@ open Main
 
 (** [make_i n i s] makes an OUnit test named [n] that expects
     [s] to evalute to [Int i]. *)
-let make_i n i s =
-  [
-    (n >:: (fun _ -> assert_equal (string_of_int i) (small_interp s)));
-    (n >:: (fun _ -> assert_equal (string_of_int i) (big_interp s)));
-  ]
+let make_i n i s = n >:: (fun _ -> assert_equal (string_of_int i) (interp s))
 
 (** [make_b n b s] makes an OUnit test named [n] that expects
     [s] to evalute to [Bool b]. *)
-let make_b n b s =
-  [
-    (n >:: (fun _ -> assert_equal (string_of_bool b) (small_interp s)));
-    (n >:: (fun _ -> assert_equal (string_of_bool b) (big_interp s)));
-  ]
+let make_b n b s = n >:: (fun _ -> assert_equal (string_of_bool b) (interp s))
 
 (** [make_err n s' s] makes an OUnit test named [n] that expects
     [s] to raise to [Failure s']. *)
-let make_err n s' s =
-  [
-    (n >:: (fun _ -> assert_raises (Failure s') (fun () -> small_interp s)));
-    (n >:: (fun _ -> assert_raises (Failure s') (fun () -> big_interp s)));
-  ]
+let make_err n s' s = n >:: (fun _ -> assert_raises (Failure s') (fun () -> interp s))
 
 let tests =
   [
@@ -50,4 +38,4 @@ let tests =
     make_err "unbound" unbound_var_err "x";
   ]
 
-let _ = run_test_tt_main ("suite" >::: List.flatten tests)
+let _ = run_test_tt_main ("suite" >::: tests)
