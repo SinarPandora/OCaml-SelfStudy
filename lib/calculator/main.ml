@@ -54,15 +54,19 @@ let rec subst e v x =
       Let (y, e1', subst e2 v x)
   | If (e1, e2, e3) -> If (subst e1 v x, subst e2 v x, subst e3 v x)
 
-(** [step_if b then' else'] 如果 b 的值是 true，执行 then'，否则执行 else'  *)
-let step_if v then' else' =
-  match v with
-  | Bool true -> then'
-  | Bool false -> else'
-  | Int _ -> failwith if_guard_err
-  | _ -> failwith precondition_violated_err
+(** [string_of_val e] 将表达式 [e] 转换为字符串 *)
+let string_of_val = function
+  | Bool b -> string_of_bool b
+  | Int i -> string_of_int i
+  | Var _
+  | Let _
+  | Binop _
+  | If _ ->
+    failwith precondition_violated_err
 
-(** [step e] 对表达式 [e] 进行一次求值 *)
+(* -------------------------------------------------------------------------------------------- *)
+
+(** [step e] 对表达式 [e] 进行一次求值（小步执行） *)
 let rec step : expr -> expr = function
   (* 由于测试语言中不存在单独一行变量名的语法，因此直接报错（不支持顶层变量） *)
   | Var _ -> failwith unbound_var_err
@@ -87,12 +91,24 @@ and step_bop bop e1 e2 =
   | (Leq, Int a, Int b) -> Bool (a <= b)
   | (Leq, _, _) -> failwith bop_err
 
+and step_if v then' else' =
+  match v with
+  | Bool true -> then'
+  | Bool false -> else'
+  | Int _ -> failwith if_guard_err
+  | _ -> failwith precondition_violated_err
+
 (** [small_eval e] 小步执行表达式 [e]，直至获得最终的值表达式，并返回它 *)
 let rec small_eval (e : expr) : expr =
   if is_value e then
     e
   else
     e |> step |> small_eval
+
+(** [small_interp s] 解析源代码 [s] 通过词法和语法分析器，小步执行它，
+    并将结果作为 [string] 返回 *)
+let small_interp (s : string) : string = s |> parse |> small_eval |> string_of_val
+(* -------------------------------------------------------------------------------------------- *)
 
 (** [big_eval e] 大步执行表达式，直接从 [e] 执行到 [v] *)
 let rec big_eval (e : expr) : expr =
@@ -123,20 +139,7 @@ and eval_if e1 e2 e3 =
   | Bool false -> big_eval e3
   | _ -> failwith if_guard_err
 
-(** [string_of_val e] 将表达式 [e] 转换为字符串 *)
-let string_of_val = function
-  | Bool b -> string_of_bool b
-  | Int i -> string_of_int i
-  | Var _
-  | Let _
-  | Binop _
-  | If _ ->
-    failwith precondition_violated_err
-
-(** [small_interp s] 解析源代码 [s] 通过词法和语法分析器，小步执行它，
-    并将结果作为 [string] 返回 *)
-let small_interp (s : string) : string = s |> parse |> small_eval |> string_of_val
-
 (** [big_interp s] 解析源代码 [s] 通过词法和语法分析器，大步执行它，
     并将结果作为 [string] 返回 *)
 let big_interp (s : string) : string = s |> parse |> big_eval |> string_of_val
+(* -------------------------------------------------------------------------------------------- *)
