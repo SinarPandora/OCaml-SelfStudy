@@ -87,12 +87,41 @@ and step_bop bop e1 e2 =
   | (Leq, Int a, Int b) -> Bool (a <= b)
   | (Leq, _, _) -> failwith bop_err
 
-(** [eval e] 执行表达式 [e]，直至获得最终的值表达式，并返回它 *)
-let rec eval (e : expr) : expr =
+(** [small_eval e] 小步执行表达式 [e]，直至获得最终的值表达式，并返回它 *)
+let rec small_eval (e : expr) : expr =
   if is_value e then
     e
   else
-    e |> step |> eval
+    e |> step |> small_eval
+
+(** [big_eval e] 大步执行表达式，直接从 [e] 执行到 [v] *)
+let rec big_eval (e : expr) : expr =
+  match e with
+  | Int _
+  | Bool _ ->
+    e
+  | Var _ -> failwith unbound_var_err
+  | Binop (bop, e1, e2) -> eval_bop bop e1 e2
+  | Let (x, e1, e2) -> eval_let x e1 e2
+  | If (e1, e2, e3) -> eval_if e1 e2 e3
+
+and eval_let x e1 e2 =
+  let v1 = big_eval e1 in
+  let e2' = subst e2 v1 x in
+  big_eval e2'
+
+and eval_bop bop e1 e2 =
+  match (bop, big_eval e1, big_eval e2) with
+  | (Add, Int a, Int b) -> Int (a + b)
+  | (Mult, Int a, Int b) -> Int (a * b)
+  | (Leq, Int a, Int b) -> Bool (a <= b)
+  | _ -> failwith bop_err
+
+and eval_if e1 e2 e3 =
+  match big_eval e1 with
+  | Bool true -> big_eval e2
+  | Bool false -> big_eval e3
+  | _ -> failwith if_guard_err
 
 (** [string_of_val e] 将表达式 [e] 转换为字符串 *)
 let string_of_val = function
@@ -104,6 +133,10 @@ let string_of_val = function
   | If _ ->
     failwith precondition_violated_err
 
-(** [interp s] 解析源代码 [s] 通过词法和语法分析器，执行它，
+(** [small_interp s] 解析源代码 [s] 通过词法和语法分析器，小步执行它，
     并将结果作为 [string] 返回 *)
-let interp (s : string) : string = s |> parse |> eval |> string_of_val
+let small_interp (s : string) : string = s |> parse |> small_eval |> string_of_val
+
+(** [big_interp s] 解析源代码 [s] 通过词法和语法分析器，大步执行它，
+    并将结果作为 [string] 返回 *)
+let big_interp (s : string) : string = s |> parse |> big_eval |> string_of_val
